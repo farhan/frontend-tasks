@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="styles.css">
+    <script type="module" src="game.js"></script>
 </head>
 
-<body class="game" onload="onPageLoad()">
-    <script type="module" src="game.js"></script>
+<body class="game">
     <h1>Welcome to Tic Tac Toe Game!</h1>
-    <button id="btn_reset" onClick="resetGame()">Reset Game</button>
+    <button id="btn_reset">Reset Game</button>
     <div id="div_status">
         <label>Game Status: </label>
         <label id="status"></label>
@@ -19,19 +19,19 @@
     <div id="div_board">
     <table>
         <tr class="board-row">
-            <td><button id="btn_1" class="square" onClick="onMove(this, 0)"></button></td>
-            <td><button id="btn_2" class="square" onClick="onMove(this, 1)"></button></td>
-            <td><button id="btn_3" class="square" onClick="onMove(this, 2)"></button></td>
+            <td><button id="btn_1" class="square"></button></td>
+            <td><button id="btn_2" class="square"></button></td>
+            <td><button id="btn_3" class="square"></button></td>
         </tr>
         <tr class="board-row">
-            <td><button id="btn_4" class="square" onClick="onMove(this, 3)"></button></td>
-            <td><button id="btn_5" class="square" onClick="onMove(this, 4)"></button></td>
-            <td><button id="btn_6" class="square" onClick="onMove(this, 5)"></button></td>
+            <td><button id="btn_4" class="square"></button></td>
+            <td><button id="btn_5" class="square"></button></td>
+            <td><button id="btn_6" class="square"></button></td>
         </tr>
         <tr class="board-row">
-            <td><button id="btn_7" class="square" onClick="onMove(this, 6)"></button></td>
-            <td><button id="btn_8" class="square" onClick="onMove(this, 7)"></button></td>
-            <td><button id="btn_9" class="square" onClick="onMove(this, 8)"></button></td>
+            <td><button id="btn_7" class="square"></button></td>
+            <td><button id="btn_8" class="square"></button></td>
+            <td><button id="btn_9" class="square"></button></td>
         </tr>
     </table>
     </div>

@@ -11,7 +11,8 @@ class Board {
         this.winner = null;
     }
 
-    calculateWinner(squares) {
+    calculateWinner() {
+        const squares = this.squares;
         const lines = [
             [0, 1, 2],
             [3, 4, 5],
@@ -29,6 +30,10 @@ class Board {
             }
         }
         return null;
+    }
+
+    checkIfDraw() {
+        return this.squares.every(sq => sq != null);
     }
 }
 
