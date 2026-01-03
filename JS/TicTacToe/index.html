@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="game.js"></script>
+</head>
+
+<body class="game">
+    <div class="title">
+        <h1>Welcome to Tic Tac Toe Game!</h1>
+    </div>
+
+    <div class="game-container">
+        <div class="game-container-inner" >
+            <div id="div_status">
+                <h3 id="status_label">Game Status:</h3>
+                <label id="status"></label>
+            </div>    
+
+            <div id="div_board">
+                <table>
+                    <tr class="board-row">
+                        <td><button id="btn_1" class="square"></button></td>
+                        <td><button id="btn_2" class="square"></button></td>
+                        <td><button id="btn_3" class="square"></button></td>
+                    </tr>
+                    <tr class="board-row">
+                        <td><button id="btn_4" class="square"></button></td>
+                        <td><button id="btn_5" class="square"></button></td>
+                        <td><button id="btn_6" class="square"></button></td>
+                    </tr>
+                    <tr class="board-row">
+                        <td><button id="btn_7" class="square"></button></td>
+                        <td><button id="btn_8" class="square"></button></td>
+                        <td><button id="btn_9" class="square"></button></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <button id="btn_reset">Reset Game</button>
+            <h3>History:</h3>
+            <ol id="history_list">
+                <!-- History buttons will be added here dynamically -->
+            </ol>
+        </div>
+    </div>
+</body>
+
+</html>
