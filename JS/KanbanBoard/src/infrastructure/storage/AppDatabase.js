@@ -1,5 +1,5 @@
 // Using Dexie.js pattern for IndexedDB management
-import Dexie from 'https://unpkg.com/dexie@latest/dist/dexie.js';
+import Dexie from 'https://unpkg.com/dexie@latest/dist/dexie.mjs';
 
 class AppDatabase extends Dexie {
     constructor() {

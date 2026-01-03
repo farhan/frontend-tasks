@@ -8,6 +8,7 @@ import { Column } from './presentation/components/Column.js';
 import { TaskModal } from './presentation/components/TaskModal.js';
 import exportManager from './core/ExportManager.js';
 import eventBus from './core/EventEmitter.js';
+import { DataSeeder } from './infrastructure/storage/DataSeeder.js';
 
 class App {
     constructor() {
@@ -19,6 +20,9 @@ class App {
     }
 
     async init() {
+        // Seed initial data if needed
+        await DataSeeder.seedIfEmpty();
+
         // Initialize Core Services
         await authManager.init();
         notificationManager.init();
