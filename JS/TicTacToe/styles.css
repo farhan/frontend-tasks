@@ -122,7 +122,3 @@
     display: flex;
     justify-content: center;
   }
-
-  #history_list li {
-    margin-bottom: 10px;
-  }
