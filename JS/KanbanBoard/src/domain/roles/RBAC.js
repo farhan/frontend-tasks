@@ -58,5 +58,6 @@ class RBAC {
     }
 }
 
-export { ROLES, PERMISSIONS, RBAC as default };
+export { ROLES, PERMISSIONS, RBAC };
+export default RBAC;
 
