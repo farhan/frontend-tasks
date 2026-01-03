@@ -19,9 +19,6 @@ class GameHistory {
         if (index < 0 || index >= this.boards_history.length) {
             throw new Error("Index out of bounds");
         }
-        if (this.boards_history[index] !== null) {
-            throw new Error("Board already set");
-        }
         this.boards_history[index] = board;
         // Remove any forward history after this index (since it's a move backward)
         this.boards_history = this.boards_history.slice(0, index + 1);
