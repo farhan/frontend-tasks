@@ -6,6 +6,7 @@ import Task from './domain/tasks/Task.js';
 import { Toast } from './presentation/components/Toast.js';
 import { Column } from './presentation/components/Column.js';
 import { TaskModal } from './presentation/components/TaskModal.js';
+import { UserModal } from './presentation/components/UserModal.js';
 import exportManager from './core/ExportManager.js';
 import eventBus from './core/EventEmitter.js';
 import { DataSeeder } from './infrastructure/storage/DataSeeder.js';
@@ -13,10 +14,17 @@ import { DataSeeder } from './infrastructure/storage/DataSeeder.js';
 class App {
     constructor() {
         this.boardContainer = document.querySelector('#kanban-board > div');
-        this.userDisplay = document.querySelector('#user-display');
-        this.roleBadge = document.querySelector('#role-badge');
         this.appContainer = document.querySelector('#app');
         this.authOverlay = document.querySelector('#auth-overlay');
+        
+        // Profile Dropdown Elements
+        this.profileBtn = document.querySelector('#profile-menu-button');
+        this.profileDropdown = document.querySelector('#profile-dropdown');
+        this.profileIcon = document.querySelector('#user-profile-icon');
+        this.dropdownUserName = document.querySelector('#dropdown-user-name');
+        this.dropdownUserRole = document.querySelector('#dropdown-user-role');
+        this.userDisplay = document.querySelector('#user-display');
+        this.roleBadge = document.querySelector('#role-badge');
     }
 
     async init() {
@@ -82,11 +90,29 @@ class App {
             authManager.login(email, role);
         };
 
-        document.querySelector('#btn-logout').onclick = () => authManager.logout();
+        // Profile Dropdown Logic
+        this.profileBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.profileDropdown.classList.toggle('hidden');
+        };
+
+        window.onclick = () => {
+            if (!this.profileDropdown.classList.contains('hidden')) {
+                this.profileDropdown.classList.add('hidden');
+            }
+        };
+
+        document.querySelector('#btn-dropdown-logout').onclick = () => authManager.logout();
+
+        document.querySelector('#btn-dropdown-account').onclick = () => {
+            const user = authManager.getUser();
+            const modal = new UserModal(user);
+            document.querySelector('#modal-container').appendChild(modal.render());
+        };
 
         document.querySelector('#btn-add-task').onclick = () => this.openTaskModal();
 
-        document.querySelector('#btn-export').onclick = async () => {
+        document.querySelector('#btn-dropdown-export').onclick = async () => {
             const tasks = await taskRepository.getAll();
             const json = await exportManager.exportTasks(tasks.map(t => t.toJSON()), 'json');
             exportManager.downloadFile(json, 'kanban-export.json', 'application/json');
@@ -101,8 +127,16 @@ class App {
         this.authOverlay.classList.add('hidden');
         this.appContainer.classList.remove('hidden');
         const user = authManager.getUser();
+        
+        // Update Header UI
         this.userDisplay.textContent = user.email;
         this.roleBadge.textContent = user.role;
+        
+        // Update Profile Dropdown
+        this.profileIcon.src = user.profileIcon;
+        this.dropdownUserName.textContent = user.name;
+        this.dropdownUserRole.textContent = user.role;
+        
         await this.renderBoard();
     }
 

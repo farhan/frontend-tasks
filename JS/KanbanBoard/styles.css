@@ -62,6 +62,37 @@
     background: #cbd5e1;
 }
 
+/* Profile Dropdown */
+#profile-dropdown {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Priority Colors */
 .priority-critical { border-left: 4px solid #ef4444; }
 .priority-high { border-left: 4px solid #f97316; }

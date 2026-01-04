@@ -1,5 +1,6 @@
 import eventBus from '../EventEmitter.js';
 import { ROLES } from '../../domain/roles/RBAC.js';
+import User from '../../domain/users/User.js';
 
 class AuthManager {
     constructor() {
@@ -14,7 +15,7 @@ class AuthManager {
     async init() {
         const savedUser = localStorage.getItem('kb_session');
         if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
+            this.currentUser = new User(JSON.parse(savedUser));
             this.startInactivityTimer();
             eventBus.emit('auth:state-change', this.currentUser);
         }
@@ -26,15 +27,17 @@ class AuthManager {
      * @param {string} role 
      */
     async login(email, role = ROLES.DEVELOPER) {
-        // Placeholder for Supabase auth
-        this.currentUser = {
+        // Mock name generation from email
+        const name = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+        
+        this.currentUser = new User({
             email,
             role,
-            id: (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)),
-            lastActive: Date.now()
-        };
+            name,
+            language: 'en'
+        });
         
-        localStorage.setItem('kb_session', JSON.stringify(this.currentUser));
+        localStorage.setItem('kb_session', JSON.stringify(this.currentUser.toJSON()));
         this.startInactivityTimer();
         eventBus.emit('auth:login', this.currentUser);
         return this.currentUser;
