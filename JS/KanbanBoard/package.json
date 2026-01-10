@@ -1,0 +1,36 @@
+{
+  "name": "kanbanboard",
+  "version": "0.0.1",
+  "description": "Kanban board developed with Vanilla JavaScript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "echo \"No linter configured yet\""
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/farhan/frontend-tasks.git"
+  },
+  "keywords": [
+    "vanilla-js",
+    "javascript",
+    "kanban",
+    "frontend"
+  ],
+  "author": "Farhan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/farhan/frontend-tasks/issues"
+  },
+  "homepage": "https://github.com/farhan/frontend-tasks#readme",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

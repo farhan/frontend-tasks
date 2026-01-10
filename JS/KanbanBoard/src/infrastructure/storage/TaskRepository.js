@@ -33,7 +33,8 @@ class TaskRepository {
             await db.tasks.update(id, taskData);
             return id;
         } else {
-            return await db.tasks.add(taskData);
+            const { id, ...newTaskData } = taskData; // Destructure to omit id
+            return await db.tasks.add(newTaskData);
         }
     }
 

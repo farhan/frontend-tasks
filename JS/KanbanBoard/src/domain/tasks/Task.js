@@ -12,7 +12,9 @@ class Task {
         createdAt = new Date(),
         updatedAt = new Date()
     }) {
-        this.id = id;
+        if (id !== null && id !== undefined) {
+            this.id = id;
+        }
         // Title: required, max 100 chars
         if (!title || typeof title !== "string" || title.trim().length === 0) {
             throw new Error("Title is required.");

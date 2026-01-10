@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Kanban Board</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- For production, install Tailwind CSS as a PostCSS plugin: https://tailwindcss.com/docs/installation -->
     <link rel="stylesheet" href="styles.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,27 +14,51 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Auth Overlay (Login) -->
-    <div id="auth-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[100] hidden">
+
+    <!-- Authentication Container -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Welcome Back</h2>
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Role (Demo Purpose)</label>
-                    <select id="login-role" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        <option value="Admin">Admin</option>
-                        <option value="QA">QA</option>
-                        <option value="Developer">Developer</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold">
-                    Sign In
-                </button>
-            </form>
+            <!-- Login Form -->
+            <div id="login-view">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Welcome Back</h2>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold">
+                        Sign In
+                    </button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    Don't have an account? <a href="#" id="show-signup" class="font-medium text-blue-600 hover:text-blue-500">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Create Your Account</h2>
+                <form id="signup-form" class="space-y-4">
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" id="signup-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="signup-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors font-semibold">
+                        Sign Up
+                    </button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    Already have an account? <a href="#" id="show-login" class="font-medium text-blue-600 hover:text-blue-500">Sign In</a>
+                </p>
+            </div>
         </div>
     </div>
 
@@ -99,7 +124,6 @@
         <!-- Toasts will appear here -->
     </div>
 
-    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/main_auth_forms.js"></script>
 </body>
 </html>
-

@@ -49,7 +49,7 @@ export class TaskModal {
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Due Date</label>
                                 <input type="date" id="task-due-date" ${!canEdit ? 'disabled' : ''}
-                                    value="${this.task?.dueDate ? this.task.dueDate.split('T')[0] : ''}"
+                                    value="${this.task?.dueDate ? this.task.dueDate.split('T')[0] : new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                         </div>

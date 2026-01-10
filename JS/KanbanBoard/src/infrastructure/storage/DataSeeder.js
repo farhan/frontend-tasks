@@ -12,14 +12,18 @@ export class DataSeeder {
         console.log("Seeding initial demo data...");
 
         // Generate dates for the future to pass Task validation
-        const inTwoDays = new Date();
-        inTwoDays.setDate(inTwoDays.getDate() + 2);
+        const today = new Date();
+        const inTwoDays = new Date(today);
+        inTwoDays.setDate(today.getDate() + 2);
 
-        const inFiveDays = new Date();
-        inFiveDays.setDate(inFiveDays.getDate() + 5);
+        const inFiveDays = new Date(today);
+        inFiveDays.setDate(today.getDate() + 5);
 
-        const inTenDays = new Date();
-        inTenDays.setDate(inTenDays.getDate() + 10);
+        const inTenDays = new Date(today);
+        inTenDays.setDate(today.getDate() + 10);
+
+        const inOneDay = new Date(today);
+        inOneDay.setDate(today.getDate() + 1);
 
         const initialTasks = [
             {
@@ -79,5 +83,26 @@ export class DataSeeder {
         await db.tasks.bulkAdd(initialTasks);
         console.log("Demo data seeded successfully.");
     }
-}
 
+    static async ensureFutureDueDates() {
+        console.log("Checking and updating past due dates for existing tasks...");
+        const now = new Date();
+        const tasksToUpdate = await db.tasks
+            .filter(task => task.dueDate && new Date(task.dueDate) < now)
+            .toArray();
+
+        if (tasksToUpdate.length > 0) {
+            const updates = tasksToUpdate.map(task => {
+                const newDueDate = new Date();
+                newDueDate.setDate(now.getDate() + 1); // Set to one day in the future
+                task.dueDate = newDueDate.toISOString();
+                task.updatedAt = new Date().toISOString();
+                return task;
+            });
+            await db.tasks.bulkPut(updates);
+            console.log(`Updated ${updates.length} tasks with future due dates.`);
+        } else {
+            console.log("No past due dates found in existing tasks.");
+        }
+    }
+}

@@ -1,6 +1,7 @@
 import eventBus from '../EventEmitter.js';
 import { ROLES } from '../../domain/roles/RBAC.js';
 import User from '../../domain/users/User.js';
+import { supabase, signUpWithEmail, signInWithEmail, signOut } from '../../infrastructure/cloudStorage/supabaseUtils.js';
 
 class AuthManager {
     constructor() {
@@ -13,11 +14,46 @@ class AuthManager {
      * Initialize auth and check for existing session
      */
     async init() {
-        const savedUser = localStorage.getItem('kb_session');
-        if (savedUser) {
-            this.currentUser = new User(JSON.parse(savedUser));
+        // Listen for auth state changes from Supabase
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                const userProfile = session.user.user_metadata;
+                this.currentUser = new User({
+                    id: session.user.id,
+                    name: userProfile?.name || session.user.email.split('@')[0],
+                    email: session.user.email,
+                    role: userProfile?.role || ROLES.DEVELOPER,
+                    language: userProfile?.language || 'en'
+                });
+                localStorage.setItem('kb_session', JSON.stringify(this.currentUser.toJSON()));
+                this.startInactivityTimer();
+                eventBus.emit('auth:login', this.currentUser);
+            } else {
+                this.currentUser = null;
+                localStorage.removeItem('kb_session');
+                clearTimeout(this.sessionTimeout);
+                eventBus.emit('auth:logout', null);
+            }
+        });
+
+        // Try to get existing session on init
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const userProfile = session.user.user_metadata;
+            this.currentUser = new User({
+                id: session.user.id,
+                name: userProfile?.name || session.user.email.split('@')[0],
+                email: session.user.email,
+                role: userProfile?.role || ROLES.DEVELOPER,
+                language: userProfile?.language || 'en'
+            });
+            localStorage.setItem('kb_session', JSON.stringify(this.currentUser.toJSON()));
             this.startInactivityTimer();
-            eventBus.emit('auth:state-change', this.currentUser);
+        } else {
+            const savedUser = localStorage.getItem('kb_session');
+            if (savedUser) {
+                localStorage.removeItem('kb_session');
+            }
         }
     }
 
@@ -26,31 +62,40 @@ class AuthManager {
      * @param {string} email 
      * @param {string} role 
      */
-    async login(email, role = ROLES.DEVELOPER) {
-        // Mock name generation from email
-        const name = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
-        
+    async login(email, password) {
+        const { data, error } = await signInWithEmail(email, password);
+        if (error) {
+            throw error;
+        }
+
+        // The onAuthStateChange listener will handle setting currentUser, localStorage, timer, and emitting event.
+        // We just need to return the user data here if needed for immediate response.
+        const session = data.session;
+        const userProfile = session.user.user_metadata;
         this.currentUser = new User({
-            email,
-            role,
-            name,
-            language: 'en'
+            id: session.user.id,
+            name: userProfile?.name || session.user.email.split('@')[0],
+            email: session.user.email,
+            role: userProfile?.role || ROLES.DEVELOPER,
+            language: userProfile?.language || 'en'
         });
         
         localStorage.setItem('kb_session', JSON.stringify(this.currentUser.toJSON()));
         this.startInactivityTimer();
         eventBus.emit('auth:login', this.currentUser);
+
         return this.currentUser;
     }
 
     /**
      * Logout user
      */
-    logout() {
-        this.currentUser = null;
-        localStorage.removeItem('kb_session');
-        clearTimeout(this.sessionTimeout);
-        eventBus.emit('auth:logout', null);
+    async logout() {
+        const { error } = await signOut();
+        if (error) {
+            throw error;
+        }
+        // The onAuthStateChange listener will handle clearing currentUser, localStorage, timer, and emitting event.
     }
 
     /**

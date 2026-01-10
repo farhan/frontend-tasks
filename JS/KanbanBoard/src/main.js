@@ -11,11 +11,10 @@ import exportManager from './core/ExportManager.js';
 import eventBus from './core/EventEmitter.js';
 import { DataSeeder } from './infrastructure/storage/DataSeeder.js';
 
-class App {
+export default class App {
     constructor() {
         this.boardContainer = document.querySelector('#kanban-board > div');
         this.appContainer = document.querySelector('#app');
-        this.authOverlay = document.querySelector('#auth-overlay');
         
         // Profile Dropdown Elements
         this.profileBtn = document.querySelector('#profile-menu-button');
@@ -30,6 +29,7 @@ class App {
     async init() {
         // Seed initial data if needed
         await DataSeeder.seedIfEmpty();
+        await DataSeeder.ensureFutureDueDates();
 
         // Initialize Core Services
         await authManager.init();
@@ -38,25 +38,18 @@ class App {
         // Bind Global Events
         this.bindEvents();
 
-        // Initial Auth Check
-        if (authManager.isAuthenticated()) {
-            this.showApp();
+        // Render Kanban Board and update user profile display
+        const user = await authManager.getUser();
+        if (user) {
+            this.updateUserProfileDisplay(user);
+            await this.renderBoard();
         } else {
-            this.showLogin();
+            console.error("App initialized but no user found in AuthManager.");
         }
+
     }
 
     bindEvents() {
-        // Auth Events
-        eventBus.on('auth:login', (user) => {
-            this.showApp();
-            Toast.show('Welcome', `Logged in as ${user.email}`, 'success');
-        });
-
-        eventBus.on('auth:logout', () => {
-            this.showLogin();
-            Toast.show('Logged Out', 'You have been logged out.', 'info');
-        });
 
         // UI Events
         eventBus.on('ui:toast', ({ title, body, type }) => {
@@ -82,13 +75,6 @@ class App {
             }
         });
 
-        // Form Bindings
-        document.querySelector('#login-form').onsubmit = (e) => {
-            e.preventDefault();
-            const email = document.querySelector('#login-email').value;
-            const role = document.querySelector('#login-role').value;
-            authManager.login(email, role);
-        };
 
         // Profile Dropdown Logic
         this.profileBtn.onclick = (e) => {
@@ -123,26 +109,16 @@ class App {
         window.addEventListener('mousedown', () => authManager.recordActivity());
     }
 
-    async showApp() {
-        this.authOverlay.classList.add('hidden');
-        this.appContainer.classList.remove('hidden');
-        const user = authManager.getUser();
-        
-        // Update Header UI
-        this.userDisplay.textContent = user.email;
-        this.roleBadge.textContent = user.role;
-        
-        // Update Profile Dropdown
-        this.profileIcon.src = user.profileIcon;
-        this.dropdownUserName.textContent = user.name;
-        this.dropdownUserRole.textContent = user.role;
-        
-        await this.renderBoard();
-    }
 
-    showLogin() {
-        this.authOverlay.classList.remove('hidden');
-        this.appContainer.classList.add('hidden');
+
+    updateUserProfileDisplay(user) {
+        if (user) {
+            this.userDisplay.textContent = user.email;
+            this.roleBadge.textContent = user.role;
+            this.profileIcon.src = user.profileIcon;
+            this.dropdownUserName.textContent = user.name;
+            this.dropdownUserRole.textContent = user.role;
+        }
     }
 
     async renderBoard() {
@@ -210,6 +186,4 @@ class App {
     }
 }
 
-const app = new App();
-app.init();
 
