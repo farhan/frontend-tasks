@@ -100,3 +100,7 @@
 .priority-medium { border-left: 4px solid #eab308; }
 .priority-low { border-left: 4px solid #3b82f6; }
 
+/* Global Spinner */
+#global-spinner.hidden {
+    display: none;
+}

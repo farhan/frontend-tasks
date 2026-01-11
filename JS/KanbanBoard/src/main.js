@@ -1,3 +1,4 @@
+import { progressBar } from './core/ProgressBar.js';
 import authManager from './core/auth/AuthManager.js';
 import notificationManager from './core/notifications/NotificationManager.js';
 import taskRepository from './infrastructure/storage/TaskRepository.js';
@@ -27,6 +28,8 @@ export default class App {
     }
 
     async init() {
+        progressBar.show();
+        try {
         // Seed initial data if needed
         await DataSeeder.seedIfEmpty();
         await DataSeeder.ensureFutureDueDates();
@@ -46,7 +49,9 @@ export default class App {
         } else {
             console.error("App initialized but no user found in AuthManager.");
         }
-
+        } finally {
+            progressBar.hide();
+        }
     }
 
     bindEvents() {
