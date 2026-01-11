@@ -2,6 +2,7 @@ import authManager from './core/auth/AuthManager.js';
 import { Toast } from './presentation/components/Toast.js';
 import eventBus from './core/EventEmitter.js';
 import { progressBar } from './core/ProgressBar.js';
+import { ROLES } from './domain/roles/RBAC.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 progressBar.show();
                 // The Supabase signUpWithEmail function does not currently accept metadata
                 // You would need to add an additional step to update user metadata after signup if needed.
-                const { user, session, error } = await authManager.signup(email, password);
+                const { user, session, error } = await authManager.signup(email, password, ROLES.DEVELOPER);
                 if (error) throw error;
                 Toast.show('Signup Successful', 'Please check your email to confirm your account.', 'success');
                 showLogin(); // Show login form after successful signup

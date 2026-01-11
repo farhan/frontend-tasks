@@ -58,6 +58,31 @@ class AuthManager {
     }
 
     /**
+     * Signup user (Supabase implementation)
+     * @param {string} email
+     * @param {string} password
+     * @param {string} role
+     */
+    async signup(email, password, role = ROLES.DEVELOPER) {
+        if (!Object.values(ROLES).includes(role)) {
+            throw new Error(`Invalid role: ${role}`);
+        }
+
+        const { data, error } = await signUpWithEmail(email, password);
+        if (error) {
+            throw error;
+        }
+
+        // Update user metadata with the selected role
+        await supabase.auth.updateUser({
+            data: { role: role }
+        });
+
+        // The onAuthStateChange listener will handle setting currentUser, localStorage, timer, and emitting event.
+        return { user: data.user, session: data.session, error: null };
+    }
+
+    /**
      * Login user (Mock implementation)
      * @param {string} email 
      * @param {string} role 
