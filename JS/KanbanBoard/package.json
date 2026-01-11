@@ -32,5 +32,8 @@
   "homepage": "https://github.com/farhan/frontend-tasks#readme",
   "devDependencies": {
     "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.90.1"
   }
 }
