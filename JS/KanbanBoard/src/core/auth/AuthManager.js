@@ -8,12 +8,16 @@ class AuthManager {
         this.currentUser = null;
         this.sessionTimeout = null;
         this.INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours
+        this.initialized = false;
     }
 
     /**
      * Initialize auth and check for existing session
      */
     async init() {
+        if (this.initialized) return;
+        this.initialized = true;
+
         // Listen for auth state changes from Supabase
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (session) {

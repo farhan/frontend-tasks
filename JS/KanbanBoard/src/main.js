@@ -25,6 +25,10 @@ export default class App {
         this.dropdownUserRole = document.querySelector('#dropdown-user-role');
         this.userDisplay = document.querySelector('#user-display');
         this.roleBadge = document.querySelector('#role-badge');
+
+        this.abortController = new AbortController();
+        this.eventBusCallbacks = [];
+        this.isRendering = false;
     }
 
     async init() {
@@ -54,22 +58,39 @@ export default class App {
         }
     }
 
+    destroy() {
+        console.log('App instance destroying, cleaning up events...');
+        this.abortController.abort();
+        this.eventBusCallbacks.forEach(({ event, cb }) => {
+            eventBus.off(event, cb);
+        });
+        this.eventBusCallbacks = [];
+        
+        // Clear UI to prevent duplicate columns if another instance starts
+        if (this.boardContainer) {
+            this.boardContainer.innerHTML = '';
+        }
+    }
+
     bindEvents() {
+        const signal = this.abortController.signal;
 
         // UI Events
-        eventBus.on('ui:toast', ({ title, body, type }) => {
+        const toastCb = ({ title, body, type }) => {
             Toast.show(title, body, type);
-        });
+        };
+        eventBus.on('ui:toast', toastCb);
+        this.eventBusCallbacks.push({ event: 'ui:toast', cb: toastCb });
 
         // Task Events
         window.addEventListener('task:dropped', async (e) => {
             const { taskId, newStatus } = e.detail;
             await this.handleTaskMove(parseInt(taskId), newStatus);
-        });
+        }, { signal });
 
         window.addEventListener('task:open-edit', async (e) => {
             this.openTaskModal(e.detail.task);
-        });
+        }, { signal });
 
         window.addEventListener('task:add-comment', async (e) => {
             const { taskId, message } = e.detail;
@@ -78,7 +99,7 @@ export default class App {
                 task.addComment({ author: authManager.getUser().email, message });
                 await taskRepository.save(task, taskId);
             }
-        });
+        }, { signal });
 
 
         // Profile Dropdown Logic
@@ -87,11 +108,11 @@ export default class App {
             this.profileDropdown.classList.toggle('hidden');
         };
 
-        window.onclick = () => {
+        window.addEventListener('click', () => {
             if (!this.profileDropdown.classList.contains('hidden')) {
                 this.profileDropdown.classList.add('hidden');
             }
-        };
+        }, { signal });
 
         document.querySelector('#btn-dropdown-logout').onclick = () => authManager.logout();
 
@@ -111,7 +132,7 @@ export default class App {
         };
 
         // Keep session alive on clicks
-        window.addEventListener('mousedown', () => authManager.recordActivity());
+        window.addEventListener('mousedown', () => authManager.recordActivity(), { signal });
     }
 
 
@@ -127,22 +148,29 @@ export default class App {
     }
 
     async renderBoard() {
-        this.boardContainer.innerHTML = '';
-        const allTasks = await taskRepository.getAll();
-        const user = authManager.getUser();
+        if (this.isRendering) return;
+        this.isRendering = true;
 
-        const columns = [
-            { title: 'To Do', status: TASK_STATUS.TODO },
-            { title: 'In Progress', status: TASK_STATUS.IN_PROGRESS },
-            { title: 'UAT', status: TASK_STATUS.UAT },
-            { title: 'Done', status: TASK_STATUS.DONE }
-        ];
+        try {
+            this.boardContainer.innerHTML = '';
+            const allTasks = await taskRepository.getAll();
+            const user = authManager.getUser();
 
-        columns.forEach(col => {
-            const tasks = allTasks.filter(t => t.status === col.status);
-            const columnUI = new Column(col.title, col.status, tasks, user);
-            this.boardContainer.appendChild(columnUI.render());
-        });
+            const columns = [
+                { title: 'To Do', status: TASK_STATUS.TODO },
+                { title: 'In Progress', status: TASK_STATUS.IN_PROGRESS },
+                { title: 'UAT', status: TASK_STATUS.UAT },
+                { title: 'Done', status: TASK_STATUS.DONE }
+            ];
+
+            columns.forEach(col => {
+                const tasks = allTasks.filter(t => t.status === col.status);
+                const columnUI = new Column(col.title, col.status, tasks, user);
+                this.boardContainer.appendChild(columnUI.render());
+            });
+        } finally {
+            this.isRendering = false;
+        }
     }
 
     async handleTaskMove(taskId, newStatus) {

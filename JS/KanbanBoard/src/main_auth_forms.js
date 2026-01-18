@@ -74,38 +74,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let appInstance = null;
+    let isInitializing = false;
+
     // Initial auth state check to show correct view
     const checkAuthAndRender = async () => {
         console.log('checkAuthAndRender called.');
         const isAuthenticated = await authManager.isAuthenticated();
         console.log('isAuthenticated:', isAuthenticated);
+        
         if (isAuthenticated) {
             console.log('User is authenticated, showing appContainer');
             authContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
-            // Dynamically load and initialize main.js
-            import('./main.js').then(({ default: App }) => {
-                const app = new App();
-                app.init();
-            });
+            
+            // Dynamically load and initialize main.js if not already initialized
+            if (!appInstance && !isInitializing) {
+                isInitializing = true;
+                try {
+                    const { default: App } = await import('./main.js');
+                    appInstance = new App();
+                    await appInstance.init();
+                } catch (error) {
+                    console.error('Failed to initialize App:', error);
+                    Toast.show('Initialization Error', 'Failed to load the dashboard.', 'error');
+                    appInstance = null;
+                } finally {
+                    isInitializing = false;
+                }
+            }
         } else {
             console.log('User is NOT authenticated, showing authContainer');
             authContainer.classList.remove('hidden');
             appContainer.classList.add('hidden');
             showLogin(); // Default to showing the login form
+            
+            if (appInstance && typeof appInstance.destroy === 'function') {
+                appInstance.destroy();
+            }
+            appInstance = null; // Allow re-initialization if needed
         }
     };
 
     // Listen for auth state changes from AuthManager
     eventBus.on('auth:login', () => {
-        authContainer.classList.add('hidden');
-        appContainer.classList.remove('hidden');
+        checkAuthAndRender();
     });
 
     eventBus.on('auth:logout', () => {
-        authContainer.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-        showLogin();
+        // For a clean state, it's often best to reload the page on logout
+        // but if we want to stay on the same page:
+        checkAuthAndRender();
     });
 
     // Initialize AuthManager and then check auth state
