@@ -1,0 +1,5 @@
+[build]
+  base = "JS/KanbanBoard"
+  publish = "dist"
+  command = "npm run build"
+

@@ -1,0 +1,222 @@
+import { progressBar } from './core/ProgressBar.js';
+import authManager from './core/auth/AuthManager.js';
+import notificationManager from './core/notifications/NotificationManager.js';
+import taskRepository from './infrastructure/storage/TaskRepository.js';
+import TaskStateMachine, { TASK_STATUS } from './domain/tasks/TaskStateMachine.js';
+import Task from './domain/tasks/Task.js';
+import { Toast } from './presentation/components/Toast.js';
+import { Column } from './presentation/components/Column.js';
+import { TaskModal } from './presentation/components/TaskModal.js';
+import { UserModal } from './presentation/components/UserModal.js';
+import exportManager from './core/ExportManager.js';
+import eventBus from './core/EventEmitter.js';
+import { DataSeeder } from './infrastructure/storage/DataSeeder.js';
+
+export default class App {
+    constructor() {
+        this.boardContainer = document.querySelector('#kanban-board > div');
+        this.appContainer = document.querySelector('#app');
+        
+        // Profile Dropdown Elements
+        this.profileBtn = document.querySelector('#profile-menu-button');
+        this.profileDropdown = document.querySelector('#profile-dropdown');
+        this.profileIcon = document.querySelector('#user-profile-icon');
+        this.dropdownUserName = document.querySelector('#dropdown-user-name');
+        this.dropdownUserRole = document.querySelector('#dropdown-user-role');
+        this.userDisplay = document.querySelector('#user-display');
+        this.roleBadge = document.querySelector('#role-badge');
+
+        this.abortController = new AbortController();
+        this.eventBusCallbacks = [];
+        this.isRendering = false;
+    }
+
+    async init() {
+        progressBar.show();
+        try {
+        // Seed initial data if needed
+        await DataSeeder.seedIfEmpty();
+        await DataSeeder.ensureFutureDueDates();
+
+        // Initialize Core Services
+        await authManager.init();
+        notificationManager.init();
+
+        // Bind Global Events
+        this.bindEvents();
+
+        // Render Kanban Board and update user profile display
+        const user = await authManager.getUser();
+        if (user) {
+            this.updateUserProfileDisplay(user);
+            await this.renderBoard();
+        } else {
+            console.error("App initialized but no user found in AuthManager.");
+        }
+        } finally {
+            progressBar.hide();
+        }
+    }
+
+    destroy() {
+        console.log('App instance destroying, cleaning up events...');
+        this.abortController.abort();
+        this.eventBusCallbacks.forEach(({ event, cb }) => {
+            eventBus.off(event, cb);
+        });
+        this.eventBusCallbacks = [];
+        
+        // Clear UI to prevent duplicate columns if another instance starts
+        if (this.boardContainer) {
+            this.boardContainer.innerHTML = '';
+        }
+    }
+
+    bindEvents() {
+        const signal = this.abortController.signal;
+
+        // UI Events
+        const toastCb = ({ title, body, type }) => {
+            Toast.show(title, body, type);
+        };
+        eventBus.on('ui:toast', toastCb);
+        this.eventBusCallbacks.push({ event: 'ui:toast', cb: toastCb });
+
+        // Task Events
+        window.addEventListener('task:dropped', async (e) => {
+            const { taskId, newStatus } = e.detail;
+            await this.handleTaskMove(parseInt(taskId), newStatus);
+        }, { signal });
+
+        window.addEventListener('task:open-edit', async (e) => {
+            this.openTaskModal(e.detail.task);
+        }, { signal });
+
+        window.addEventListener('task:add-comment', async (e) => {
+            const { taskId, message } = e.detail;
+            const task = await taskRepository.getById(taskId);
+            if (task) {
+                task.addComment({ author: authManager.getUser().email, message });
+                await taskRepository.save(task, taskId);
+            }
+        }, { signal });
+
+
+        // Profile Dropdown Logic
+        this.profileBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.profileDropdown.classList.toggle('hidden');
+        };
+
+        window.addEventListener('click', () => {
+            if (!this.profileDropdown.classList.contains('hidden')) {
+                this.profileDropdown.classList.add('hidden');
+            }
+        }, { signal });
+
+        document.querySelector('#btn-dropdown-logout').onclick = () => authManager.logout();
+
+        document.querySelector('#btn-dropdown-account').onclick = () => {
+            const user = authManager.getUser();
+            const modal = new UserModal(user);
+            document.querySelector('#modal-container').appendChild(modal.render());
+        };
+
+        document.querySelector('#btn-add-task').onclick = () => this.openTaskModal();
+
+        document.querySelector('#btn-dropdown-export').onclick = async () => {
+            const tasks = await taskRepository.getAll();
+            const json = await exportManager.exportTasks(tasks.map(t => t.toJSON()), 'json');
+            exportManager.downloadFile(json, 'kanban-export.json', 'application/json');
+            Toast.show('Export Success', 'Data downloaded as JSON', 'success');
+        };
+
+        // Keep session alive on clicks
+        window.addEventListener('mousedown', () => authManager.recordActivity(), { signal });
+    }
+
+
+
+    updateUserProfileDisplay(user) {
+        if (user) {
+            this.userDisplay.textContent = user.email;
+            this.roleBadge.textContent = user.role;
+            this.profileIcon.src = user.profileIcon;
+            this.dropdownUserName.textContent = user.name;
+            this.dropdownUserRole.textContent = user.role;
+        }
+    }
+
+    async renderBoard() {
+        if (this.isRendering) return;
+        this.isRendering = true;
+
+        try {
+            this.boardContainer.innerHTML = '';
+            const allTasks = await taskRepository.getAll();
+            const user = authManager.getUser();
+
+            const columns = [
+                { title: 'To Do', status: TASK_STATUS.TODO },
+                { title: 'In Progress', status: TASK_STATUS.IN_PROGRESS },
+                { title: 'UAT', status: TASK_STATUS.UAT },
+                { title: 'Done', status: TASK_STATUS.DONE }
+            ];
+
+            columns.forEach(col => {
+                const tasks = allTasks.filter(t => t.status === col.status);
+                const columnUI = new Column(col.title, col.status, tasks, user);
+                this.boardContainer.appendChild(columnUI.render());
+            });
+        } finally {
+            this.isRendering = false;
+        }
+    }
+
+    async handleTaskMove(taskId, newStatus) {
+        try {
+            const task = await taskRepository.getById(taskId);
+            if (!task) return;
+
+            TaskStateMachine.transition(task, newStatus, authManager.getUser());
+            await taskRepository.save(task, taskId);
+            await this.renderBoard();
+            
+            Toast.show('Success', `Task moved to ${newStatus}`, 'success');
+        } catch (error) {
+            Toast.show('Action Denied', error.message, 'error');
+            // Re-render to reset visual state if needed
+            this.renderBoard();
+        }
+    }
+
+    openTaskModal(task = null) {
+        const container = document.querySelector('#modal-container');
+        const modal = new TaskModal(
+            task, 
+            authManager.getUser(),
+            async (data) => {
+                if (task) {
+                    // Update
+                    Object.assign(task, data);
+                    await taskRepository.save(task, task.id);
+                    Toast.show('Updated', 'Task updated successfully', 'success');
+                } else {
+                    // Create
+                    const newTask = new Task({ ...data, status: TASK_STATUS.TODO });
+                    await taskRepository.save(newTask);
+                    Toast.show('Created', 'New task added to board', 'success');
+                }
+                this.renderBoard();
+            },
+            async (id) => {
+                await taskRepository.delete(id);
+                this.renderBoard();
+                Toast.show('Deleted', 'Task removed', 'warning');
+            }
+        );
+        container.appendChild(modal.render());
+    }
+}
+
+

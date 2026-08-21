@@ -1,0 +1,157 @@
+Advanced  Kanban Board Assignment
+
+📌 Assignment Overview
+Build a purely client-side Kanban board with:
+✅ Drag-and-drop task management
+✅ Role-based access control (3 distinct roles)
+✅ Advanced Realtime notification system (Use  Event Emitter/Bus)  design pattern)
+✅ Web Worker-powered data exports
+✅ Supabase auth integration (session management only)
+✅ Use IndexedDB for data persistence, preferably dexie.js wrapper or choose from all
+
+📌 Core Requirements
+📋Task Management
+Task Fields :
+Title (Required, max 100 chars)
+Description (Markdown supported)
+Assignee (Dropdown of authenticated users)
+Due Date (Future dates only, timezone-aware, date time picker, date-fns)
+Priority (Low/Medium/High/Critical)
+Status (Todo/In Progress/ UAT / Done)
+Comments (Timestamps, edit history)
+Attachments  (find a way to save images in indexdb)
+Task Actions:
+Drag-and-drop between columns ( state machine to handle states)
+Double-click to edit in a modal
+Persist open modals on refresh
+State Preservation
+Remains open through page refreshes
+Restores scroll position in comments
+Remembers last active tab (details/comments/attachments)
+Multi-Task Viewing
+Allow opening multiple modals (stacked/z-index)
+Keyboard shortcuts to cycle through open modals
+📢 Comprehensive Notification System
+Global System-Wide Notifications (Default for All Tasks)
+Task Due Reminders
+Configurable lead times (e.g., 1 day, 1 hour, 15 minutes before due)
+Escalation path for overdue tasks (notify manager after X hours)
+Multiple reminders per task
+Status Change Alerts (When a task moves between columns (Todo → In Progress → Done)
+Assignment Notifications (When a user is assigned/reassigned a task)
+Comment Activity
+Notify the task assignee of new comments
+@mention support for specific users
+Settings
+Enable/disable per notification type
+Default timing for reminders
+Preferred channels (in-app toast, browser notification)
+ Per-Task Notification Overrides
+Disable specific notifications for a task
+Adjust reminder times (e.g., "Notify me 10 minutes before due")
+
+
+
+
+
+
+
+
+Role-Based Access Control (RBAC)
+Roles & Permissions
+Action
+Admin
+QA
+Developer
+
+
+Create/Delete Tasks
+✅
+❌
+❌
+
+
+Edit All Fields
+✅
+❌
+❌
+
+
+Reassign Tasks
+✅
+❌
+❌
+
+
+Move to "Done"
+✅
+✅
+❌
+
+
+Add Comments
+✅
+✅
+✅
+
+
+Configure Notifications
+✅
+❌
+❌
+
+
+
+Design
+Use google’s material web components or tailwind 
+
+Guidelines
+Suggested Implementation Approach
+Phase 1: Base Kanban with localStorage
+Phase 2: Auth integration (Supabase)
+Phase 3: Notification system
+Phase 4: Web Worker exports
+Phase 5: RBAC enforcement
+Phase 6: Polish and edge cases
+Modular Architecture
+
+🔍 Code Review Checklist
+For Every Pull Request:
+SOLID:
+No class > 300 lines
+Interfaces for cross-module communication
+DRY:
+Shared utility functions used
+No duplicate CSS/validation logic
+Design System:
+Uses centralised spacing vars
+Follows typography scale
+Performance:
+Web Worker for heavy ops
+Debounced event handlers
+Security Constraints
+Client-Side Enforcement
+All RBAC checks must happen in UI logic
+Defensive coding against manual localStorage tampering
+Read-only views for unauthorised actions
+Data Exposure Prevention
+Never expose other users' email addresses
+Sanitise all comment input
+Prevent HTML/script injection in any field
+Session Protection
+Auto-logout after 2 hours of inactivity
+Clear sensitive data on logout
+
+📝 Submission Requirements
+Code Repository
+Clean commit history
+.gitignore proper configuration
+ESLint/Prettier setup
+Documentation
+Setup instructions
+Architecture decisions
+Known limitations
+Demo Video (2-3 mins)
+Show all role flows
+Demonstrate exports with 10k+ tasks
+
