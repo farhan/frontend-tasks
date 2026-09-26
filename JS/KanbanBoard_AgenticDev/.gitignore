@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Dependencies / build (self-contained for a future standalone repo)
+node_modules/
+dist/
+
+# Claude Code — commit shared artifacts (settings.json, commands, agents,
+# hooks, skills), ignore personal / ephemeral / secret files
+.claude/settings.local.json
+.claude/**/*.local.json
+.claude/.credentials.json
+.claude/agent-memory/
+.claude/worktrees/
+.worktrees/
+.claude-history/
+# auto-generated scratch inside .claude stays out
+.claude/plans/
+
+# ── Optional un-versioning (leave commented until you actually want it) ──
+# Task/story execution plans are committed by default for the audit trail.
+# Uncomment the line below to STOP versioning them — do this when either:
+#   • the repo/history is getting noisy and old plans no longer add value, or
+#   • multiple members join and per-story plans become personal scratch.
+# Project-scope specs in docs/superpowers/specs/ are ALWAYS versioned — never ignore those.
+# docs/superpowers/plans/
